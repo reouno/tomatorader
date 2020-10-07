@@ -1,0 +1,48 @@
+@startuml trade-manager
+
+package BackTestExchange {
+    class Broker {
+        add_closed_order_observer(Observer)
+    }
+    class TradeManager {
+        notify_order_filled(FilledOrder)
+        notify_order_cancelled(Order)
+        notify_new_orders([Order])
+    }
+    class PositionManager {
+        positions: Dict[str: List[Share]]
+        update_positions(List[FilledOrder])
+    }
+    class OrderManager {
+        open_orders: List[Order]
+        closed_orders: List[Order]
+        add_open_orders(List[Order])
+        update_orders(List[Order])
+    }
+    class AccountManager {
+        balance: Decimal
+        buying_power: Decimal
+        net_worth: Decimal
+        realized_pl: Decimal
+        unrealized_pl: Decimal
+    }
+
+    class NewOrderReceiver
+
+    Broker -left-> TradeManager
+    Broker .down.> PriceStream
+    TradeManager -up-> PositionManager
+    TradeManager -up-> OrderManager
+    TradeManager -up-> AccountManager
+
+    NewOrderReceiver -up-> TradeManager
+    NewOrderReceiver -up-> Broker
+}
+
+package Client {
+    class OrderClient
+
+    OrderClient -up-> NewOrderReceiver
+}
+
+@enduml

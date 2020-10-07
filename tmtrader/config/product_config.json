@@ -1,0 +1,11 @@
+{
+  "default": {},
+  "products": [
+    {
+      "id": 1,
+      "name": "Micro E-Mini S&P 500 Futures",
+      "min_frac": 25,
+      "n_float_digits": 2
+    }
+  ]
+}

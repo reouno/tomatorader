@@ -1,0 +1,154 @@
+@startuml overview
+
+package ExchangeMaybeLikeThis {
+    class RealTimePriceStream
+    class TradeManager
+    class AccountManager {
+        buying_power: Decimal
+        balance: Decimal
+        net_worth: Decimal
+        realized_pr: Decimal
+        unrealized_pr: Decimal
+    }
+    class OrderManager {
+        open_orders: [Order]
+        closed_orders: [ClosedOrder]
+    }
+    class PositionManager {
+        positions: {pid: Positions}
+    }
+    class Broker {
+        open_orders: [Order]
+        register_order(Order)
+    }
+
+    TradeManager -> Broker
+    TradeManager -down-> AccountManager
+    TradeManager -down-> OrderManager
+    TradeManager -down-> PositionManager
+    Broker -left-> RealTimePriceStream
+}
+
+package TradeClient {
+    package APIClient {
+        class PriceAPIClient
+        class AccountClient
+        class OrderHistoryClient
+        class PositionClient
+        class OrderClient {
+            buy(condition)
+            sell(condition)
+        }
+    }
+
+    interface PriceDataController {
+        register_notify()
+        notify(PriceHistoryRef)
+        unregister_notify()
+        writeDB()
+    }
+
+    interface TradeDataController {
+        register_notify()
+        notify(AccountRef)
+        unregister_notify()
+        writeDB()
+    }
+
+
+    interface OrderController {
+        buy(order: BasicOrder)
+        sell(order: BasicOrder)
+        order(order: ConditionalOrder)
+    }
+
+    class StrategyProcesser {
+        add(strategy: Strategy)
+        delete(strategy: Strategy)
+        notify_price_update(price_ref: PriceSequence)
+    }
+
+    class StudyProcessor {
+        add(study: Study)
+        delete(study: Study)
+        notify_price_update(price_ref: PriceSequence)
+    }
+
+    package UsecaseExtensibleByUser {
+        interface Strategy {
+            execute()
+        }
+        note left: User can implement \ntheir own trading strategies and studies.
+
+        interface Study {
+            execute()
+        }
+    }
+
+    package Entity {
+        interface PriceSequence {
+            open: NDArray
+            high: NDArray
+            low: NDArray
+            close: NDArray
+            vol: NDArray
+            time: NDArray
+        }
+
+        interface OrderHistory {
+            history: DataFrame
+        }
+
+        interface Account {
+            buying_power: Decimal
+            balance: Decimal
+            net_worth: Decimal
+            realized_pr: Decimal
+            unrealized_pr: Decimal
+        }
+
+        interface Order {
+            timestamp: int
+            product_id: int
+            n_shares: int
+            price: Decimal
+        }
+
+        interface OwnedPositions {
+            positions: {pid: Positions}
+        }
+    }
+
+    OrderClient -> Order
+    PriceDataController -up-> PriceAPIClient
+    PriceDataController -> StrategyProcesser
+    TradeDataController -up-> AccountClient
+    TradeDataController -up-> OrderHistoryClient
+    TradeDataController -up-> PositionClient
+    OrderController -up-> OrderClient
+    StrategyProcesser -> Strategy
+    StrategyProcesser -> TradeDataController
+    StrategyProcesser -> OrderController
+    StudyProcessor -up-> PriceDataController
+    StudyProcessor -down-> Study
+
+    PriceAPIClient -up-> RealTimePriceStream
+    AccountClient -up-> AccountManager
+    OrderHistoryClient -up-> OrderManager
+    PositionClient -up-> PositionManager
+    OrderClient -up-> Broker
+    Broker -> Order
+}
+
+package PersistentLayer {
+    class DB
+}
+PriceDataController -left-> DB
+TradeDataController -left-> DB
+
+package PresentationLayer {
+    class Display
+}
+Study -down-> Display
+
+@enduml

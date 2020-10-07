@@ -1,0 +1,15 @@
+@startuml
+
+package HowToManageStrategyId {
+
+    entity Strategy {
+        id: int
+    }
+
+    class StrategyManager {
+        strategies: Dict[int, Strategy]
+    }
+
+}
+
+@enduml
